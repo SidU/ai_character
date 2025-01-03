@@ -236,7 +236,6 @@ pytest
 ```
 
 ### Code Style
-- Follow PEP 8 guidelines
 - Include docstrings for all functions and classes
 - Add type hints where possible
 - Write unit tests for new features
