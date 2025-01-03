@@ -233,9 +233,6 @@ pip install -r requirements-dev.txt
 
 # Run tests
 pytest
-
-# Run linter
-flake8
 ```
 
 ### Code Style
