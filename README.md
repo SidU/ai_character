@@ -37,8 +37,10 @@ Before installing the AI Character Framework, ensure you have:
 2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
+
    # On Unix/macOS:
    source venv/bin/activate
+   
    # On Windows:
    venv\Scripts\activate
    ```
@@ -52,11 +54,11 @@ Before installing the AI Character Framework, ensure you have:
    ```bash
    # On Unix/macOS:
    export OPENAI_API_KEY="your-api-key"
-   export ELEVENLABS_API_KEY="your-api-key"
+   export ELEVEN_API_KEY="your-api-key"
 
    # On Windows:
    set OPENAI_API_KEY=your-api-key
-   set ELEVENLABS_API_KEY=your-api-key
+   set ELEVEN_API_KEY=your-api-key
    ```
 
 ## Quick Start
@@ -70,7 +72,7 @@ Before installing the AI Character Framework, ensure you have:
      - "Boo! Did I scare you? Just kidding!"
      - "Welcome to my spooky corner!"
    enable_vision: true
-   model: "gpt-4-vision-preview"
+   model: "gpt-4o-mini"
    ```
 
 2. Run the test script to start interacting with your character:
@@ -140,7 +142,7 @@ from ai_character import AICharacter
 config = {
     'system_prompt': 'You are a storytelling assistant.',
     'voice_id': 'your-voice-id',
-    'model': 'gpt-4-vision-preview',
+    'model': 'gpt-4o-mini',
     'enable_vision': True,
     'sampling_rate': 44100,
     'silence_threshold': 15,
@@ -224,7 +226,7 @@ We welcome contributions to the AI Character Framework! Here's how you can help:
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/ai_character.git
+git clone https://github.com/sidu/ai_character.git
 
 # Install dev dependencies
 pip install -r requirements-dev.txt
