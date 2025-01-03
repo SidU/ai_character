@@ -156,9 +156,8 @@ try:
     character.speak("Let me tell you a story...")
     
     # Process image and voice input
-    image_path = "example.jpg"
     user_input = character.listen()
-    response = character.think_response(user_input, image=image_path)
+    response = character.think_response(user_input)
     character.speak(response)
 finally:
     character.cleanup()
