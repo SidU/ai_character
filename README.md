@@ -80,7 +80,7 @@ To quickly get up and running, use the **`AICharacterAgent`** class, which provi
 
 2. Run the agent script to start interacting with your character:
    ```bash
-   python ai_character_agent.py --config config.yaml --debug
+   python run_agent.py --config ghost.yaml --debug 
    ```
 
 * The agent will speak a greeting, then listen for your voice input.
