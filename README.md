@@ -30,7 +30,7 @@ Before installing the AI Character Framework, ensure you have:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/ai_character.git
+   git clone https://github.com/sidu/ai_character.git
    cd ai_character
    ```
 
