@@ -61,24 +61,30 @@ Before installing the AI Character Framework, ensure you have:
    set ELEVEN_API_KEY=your-api-key
    ```
 
-## Quick Start
+## Quick Start with `AICharacterAgent`
 
-1. Create a configuration file `config.yaml` for your character:
+To quickly get up and running, use the **`AICharacterAgent`** class, which provides a simple, batteries-included experience (listen → think → speak loop, greeting support, and callbacks).
+
+1. **Create a config file** (e.g., `config.yaml`):
    ```yaml
-   system_prompt: "You're Skullton, a playful and spooky toy skeleton with a mischievous streak. 
-                  Engage with users in a way that's fun, a little eerie, but always friendly."
+   system_prompt: "You are Skullton, a playful skeleton with a mischievous streak."
    voice_id: "your-elevenlabs-voice-id"
    greetings:
-     - "Boo! Did I scare you? Just kidding!"
+     - "Boo! Did I scare you?"
      - "Welcome to my spooky corner!"
-   enable_vision: true
+   enable_vision: false
    model: "gpt-4o-mini"
+   sampling_rate: 16000
+   silence_threshold: 10.0
+   silence_count_threshold: 10
+
+2. Run the agent script to start interacting with your character:
+   ```bash
+   python ai_character_agent.py --config config.yaml --debug
    ```
 
-2. Run the test script to start interacting with your character:
-   ```bash
-   python test_local.py
-   ```
+* The agent will speak a greeting, then listen for your voice input.
+* It will generate a response using your chosen language model and speak it aloud.
 
 ## Configuration
 
@@ -111,58 +117,138 @@ The framework uses YAML configuration files to define character behavior. Here's
 
 ### Basic Usage
 ```python
-from ai_character import AICharacter
+from ai_character import AICharacterAgent
 
-# Initialize with basic configuration
-config = {
-    'system_prompt': 'You are a helpful assistant.',
-    'voice_id': 'your-voice-id',
-    'model': 'gpt-4o-mini'
-}
+# Initialize agent with config file
+agent = AICharacterAgent("config.yaml", debug=False)
 
-character = AICharacter(config)
-
-# Basic conversation loop
+# Run the agent (this handles the listen → think → speak loop)
 try:
-    # Perceive
-    user_input = character.listen()
-    
-    # Think
-    response = character.think_response(user_input)
-
-    # Speak
-    character.speak(response)
-finally:
-    character.cleanup()
+    agent.run()
+except KeyboardInterrupt:
+    agent.stop()
 ```
 
 ### Advanced Usage
+This advanced example demonstrates how to extend the `AICharacterAgent` class to control physical hardware (like a robot). Key features shown:
+
+- **Hardware Integration**: Shows how to coordinate AI responses with physical movements
+- **State Management**: Demonstrates proper handling of robot positions and states
+- **Event Handling**: Uses the speaking callbacks to synchronize mouth movements with speech
+- **Resource Management**: Proper initialization and cleanup of hardware resources
+- **Custom Behaviors**: Adds gesture system that responds to specific keywords in conversation
+
+You can use this pattern to create your own specialized agents, such as:
+- Robot characters with servo motors
+- Virtual avatars with animated expressions
+- Smart home characters that control IoT devices
+- Game characters with in-game actions
+
 ```python
-from ai_character import AICharacter
+from ai_character import AICharacterAgent
+import time
 
-# Initialize with advanced configuration
-config = {
-    'system_prompt': 'You are a storytelling assistant.',
-    'voice_id': 'your-voice-id',
-    'model': 'gpt-4o-mini',
-    'enable_vision': True,
-    'sampling_rate': 44100,
-    'silence_threshold': 15,
-    'enable_lonely_sounds': True
-}
-
-character = AICharacter(config, debug=True)
-
-try:
-    # Custom greeting
-    character.speak("Let me tell you a story...")
+class RobotCharacterAgent(AICharacterAgent):
+    def __init__(self, config_path, debug=False):
+        super().__init__(config_path, debug)
+        self.motor_enabled = True
+        # Initialize your robot's hardware here
+        
+    def _on_speaking_state_changed(self, is_speaking):
+        super()._on_speaking_state_changed(is_speaking)
+        if is_speaking:
+            # Move robot's mouth when speaking
+            self._move_mouth(True)
+        else:
+            self._move_mouth(False)
     
-    # Process image and voice input
-    user_input = character.listen()
-    response = character.think_response(user_input)
-    character.speak(response)
-finally:
-    character.cleanup()
+    def _move_mouth(self, open):
+        if self.motor_enabled:
+            if self.debug:
+                print(f"\nMoving mouth {'open' if open else 'closed'}")
+            # Add your motor control code here
+            
+    def run(self):
+        """Custom run loop with additional robot behaviors"""
+        try:
+            # Initialize robot position
+            self._move_to_ready_position()
+            
+            # Say greeting with gesture
+            self._wave_hand()
+            self.character.say_greeting()
+            self._speaking_done.wait()
+
+            while self.running:
+                self._speaking_done.wait()
+
+                if self.debug:
+                    print("\nListening and watching...", end='', flush=True)
+                user_input = self.character.listen()
+
+                if user_input:
+                    # Add gesture based on user input
+                    if "happy" in user_input.lower():
+                        self._do_happy_dance()
+                    
+                    if self.debug:
+                        print("\nProcessing and planning movement...", end='', flush=True)
+                    response = self.character.think_response(user_input)
+                    
+                    if response:
+                        # Coordinate speech with movement
+                        self._prepare_gesture(response)
+                        self.character.speak(response)
+                        self._speaking_done.wait()
+
+                time.sleep(0.1)
+
+        except KeyboardInterrupt:
+            if self.debug:
+                print("\nStopping robot character...")
+        finally:
+            self._move_to_rest_position()
+            self.stop()
+    
+    def stop(self):
+        # Cleanup robot hardware
+        if self.motor_enabled:
+            self._move_to_rest_position()
+        super().stop()
+    
+    # Robot-specific methods
+    def _move_to_ready_position(self):
+        if self.debug:
+            print("Moving to ready position")
+        # Add motor control code
+        
+    def _move_to_rest_position(self):
+        if self.debug:
+            print("Moving to rest position")
+        # Add motor control code
+        
+    def _wave_hand(self):
+        if self.debug:
+            print("Waving hand")
+        # Add motor control code
+        
+    def _do_happy_dance(self):
+        if self.debug:
+            print("Performing happy dance")
+        # Add motor control code
+        
+    def _prepare_gesture(self, response):
+        if self.debug:
+            print("Preparing gesture based on response")
+        # Add gesture planning code
+
+# Usage example
+if __name__ == "__main__":
+    robot = RobotCharacterAgent("robot_config.yaml", debug=True)
+    try:
+        robot.run()
+    except KeyboardInterrupt:
+        robot.stop()
 ```
 
 ## API Reference
