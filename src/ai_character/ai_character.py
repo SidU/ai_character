@@ -81,8 +81,8 @@ class AICharacter:
         self.metrics = AICharacterMetrics()
         self.audio_processor = AudioProcessor(config, debug=debug)
 
-        # Create temp directory for audio files
-        self.temp_dir = os.path.join(os.getcwd(), "temp_audio")
+        # Use system temp directory instead of creating one in current directory
+        self.temp_dir = os.path.join(tempfile.gettempdir(), "ai_character_audio")
         os.makedirs(self.temp_dir, exist_ok=True)
 
     def _debug_print(self, *args, **kwargs):
@@ -360,7 +360,7 @@ class AICharacter:
             self.state = AICharacterState.IDLE
             self.pygame_initialized = False
             
-            # Clean up temp directory
+            # Clean up temp directory - only remove our specific subdirectory
             if os.path.exists(self.temp_dir):
                 for file in os.listdir(self.temp_dir):
                     file_path = os.path.join(self.temp_dir, file)
