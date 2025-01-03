@@ -392,8 +392,9 @@ class AICharacter:
                 print("Can't receive frame (stream end?). Exiting ...")
                 return None
             
-            # Save the frame as an image file (optional, for debugging)
-            cv2.imwrite('view.jpeg', frame)
+            # Save the frame as an image file only if debug is enabled
+            if self.debug:
+                cv2.imwrite('view.jpeg', frame)
 
             retval, buffer = cv2.imencode('.jpg', frame)
             if not retval:
