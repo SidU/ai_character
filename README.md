@@ -124,11 +124,13 @@ character = AICharacter(config)
 
 # Basic conversation loop
 try:
-    # Get user input
+    # Perceive
     user_input = character.listen()
     
-    # Generate and speak response
+    # Think
     response = character.think_response(user_input)
+
+    # Speak
     character.speak(response)
 finally:
     character.cleanup()

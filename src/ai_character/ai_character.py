@@ -66,6 +66,7 @@ class AICharacter:
         self.initialize_components()
         self.is_speaking = False
         self.on_speaking_callbacks = []
+        self.on_speaking_done_callbacks = []
         self.messages = [
             {"role": "system", "content": self.system_prompt}
         ]
@@ -267,6 +268,7 @@ class AICharacter:
                         
                 finally:
                     self._notify_speaking_state(False)
+                    self._notify_speaking_done()
                     if callback:
                         callback()
                     # Clean up the temporary file
@@ -503,3 +505,18 @@ class AICharacter:
         if self.greetings:
             greeting = random.choice(self.greetings)
             self.speak(greeting)
+
+    def add_speaking_done_callback(self, callback):
+        """Add a callback function that will be called when speaking is complete."""
+        if callable(callback):
+            self.on_speaking_done_callbacks.append(callback)
+        else:
+            raise TypeError("Callback must be callable")
+
+    def _notify_speaking_done(self):
+        """Notify all callbacks that speaking is complete."""
+        for callback in self.on_speaking_done_callbacks:
+            try:
+                callback()
+            except Exception as e:
+                print(f"Error in speaking done callback: {e}")
