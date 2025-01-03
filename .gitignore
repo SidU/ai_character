@@ -1,6 +1,7 @@
+# Python
 __pycache__/
 *.py[cod]
-*.class
+*$py.class
 *.so
 .Python
 build/
@@ -18,10 +19,16 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.env
-.venv
-env/
+
+# Virtual Environment
 venv/
 ENV/
+
+# IDE
 .idea/
 .vscode/
+
+# Project specific
+temp_audio/
+*.mp3
+view.jpeg
