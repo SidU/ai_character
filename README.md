@@ -105,9 +105,6 @@ The framework uses YAML configuration files to define character behavior. Here's
 | `enable_lonely_sounds` | Enable ambient character sounds | false |
 | `enable_squeak` | Enable interaction sounds | false |
 
-### Available Parameters
-Table of parameters
-
 ## Usage Examples
 
 ### Basic Usage
@@ -180,19 +177,28 @@ AICharacter(config: dict, debug: bool = False)
 
 | Method | Description | Parameters | Returns |
 |--------|-------------|------------|---------|
-| `listen()` | Records and transcribes user audio | None | str |
-| `think_response(text: str, image: str = None)` | Generates AI response | text, optional image path | str |
-| `speak(text: str)` | Converts text to speech | text to speak | None |
-| `say_greeting()` | Speaks a random greeting | None | None |
+| `listen()` | Records and transcribes user audio | None | str or None |
+| `think_response(user_input: str)` | Generates AI response with rate limiting | user_input: str | str or None |
+| `speak(text: str, callback: callable = None)` | Converts text to speech asynchronously | text, optional callback | None |
+| `say_greeting()` | Speaks a random greeting from config | None | None |
 | `cleanup()` | Cleans up resources | None | None |
 
-#### Advanced Methods
+#### State Management Methods
 
 | Method | Description | Parameters |
 |--------|-------------|------------|
-| `set_voice(voice_id: str)` | Changes TTS voice | voice_id |
-| `update_config(config: dict)` | Updates configuration | config dict |
-| `calibrate_audio()` | Calibrates audio levels | None |
+| `set_state(new_state: str)` | Updates character's state | new_state |
+| `get_speaking_state()` | Returns current speaking status | None |
+| `add_speaking_callback(callback: callable)` | Adds speaking state callback | callback |
+| `set_volume(volume: float)` | Sets audio volume (0.0 to 1.0) | volume |
+| `get_metrics()` | Returns performance metrics | None |
+
+#### States (AICharacterState)
+- `IDLE`
+- `LISTENING`
+- `THINKING`
+- `SPEAKING`
+- `ERROR`
 
 ## Contributing
 
