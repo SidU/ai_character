@@ -81,10 +81,6 @@ class AICharacter:
         self.metrics = AICharacterMetrics()
         self.audio_processor = AudioProcessor(config, debug=debug)
 
-        # Use system temp directory instead of creating one in current directory
-        self.temp_dir = os.path.join(tempfile.gettempdir(), "ai_character_audio")
-        os.makedirs(self.temp_dir, exist_ok=True)
-
     def _debug_print(self, *args, **kwargs):
         """Print debug information if debug mode is enabled."""
         if self.debug:
@@ -216,15 +212,37 @@ class AICharacter:
         """Transcribe audio data to text."""
         if audio_data is None:
             return None
+        
+        temp_path = None
+        try:
+            # Create a temporary file with a unique name
+            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_file:
+                temp_path = temp_file.name
+                audio_segment = self.audio_processor.create_audio_segment(audio_data)
+                audio_segment.export(temp_file, format="mp3")
+                # Ensure the file is closed before we try to reopen it
+                temp_file.flush()
+                temp_file.close()
             
-        with tempfile.NamedTemporaryFile(suffix=".mp3") as f:
-            audio_segment = self.audio_processor.create_audio_segment(audio_data)
-            audio_segment.export(f.name, format="mp3")
+            # Now open and use the file for transcription
+            with open(temp_path, "rb") as audio_file:
+                transcript = self.model_handler.transcribe_audio(audio_file)
             
-            # Use model handler for transcription instead of direct OpenAI client
-            audio_file = open(f.name, "rb")
-            transcript = self.model_handler.transcribe_audio(audio_file)
             return transcript
+                
+        except Exception as e:
+            self._debug_print(f"Error in transcription: {e}")
+            return None
+        
+        finally:
+            # Clean up the temporary file after all operations are complete
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    # Add a small delay to ensure all handles are released
+                    time.sleep(0.1)
+                    os.unlink(temp_path)
+                except Exception as e:
+                    self._debug_print(f"Error removing temporary file: {e}")
 
     def speak(self, text, callback=None):
         """Generate and play audio for the given text asynchronously."""
@@ -232,7 +250,6 @@ class AICharacter:
             self.set_state(AICharacterState.SPEAKING)
             try:
                 self._notify_speaking_state(True)
-                output_filename = os.path.join(self.temp_dir, f"pet_response_{int(time.time())}.mp3")
                 
                 try:
                     audio_stream = self.eleven_client.generate(
@@ -249,17 +266,15 @@ class AICharacter:
                             audio_buffer.write(chunk)
 
                     audio_buffer.seek(0)
-                    with open(output_filename, "wb") as f:
-                        f.write(audio_buffer.getvalue())
-
-                    # Display animation and play audio if display is enabled
-                    if self.enable_display:
-                        self._display_talking_animation(output_filename)
-                    else:
-                        pygame.mixer.music.load(output_filename)
-                        pygame.mixer.music.play()
-                        while pygame.mixer.music.get_busy():
-                            pygame.time.wait(100)
+                    
+                    # Create and play sound directly from memory
+                    sound = pygame.mixer.Sound(audio_buffer)
+                    sound.set_volume(self.volume)
+                    sound.play()
+                    
+                    # Wait for sound to finish
+                    while pygame.mixer.get_busy():
+                        pygame.time.wait(100)
                     
                     # Update conversation history
                     self.messages.append({"role": "assistant", "content": text})
@@ -271,18 +286,12 @@ class AICharacter:
                     self._notify_speaking_done()
                     if callback:
                         callback()
-                    # Clean up the temporary file
-                    if os.path.exists(output_filename):
-                        os.remove(output_filename)
 
             finally:
                 self.set_state(AICharacterState.IDLE)
                 self._notify_speaking_state(False)
                 if callback:
                     callback()
-                # Clean up the temporary file
-                if os.path.exists(output_filename):
-                    os.remove(output_filename)
 
         self.audio_thread = threading.Thread(target=audio_worker)
         self.audio_thread.start()
@@ -345,8 +354,9 @@ class AICharacter:
         try:
             # Stop any ongoing audio
             if self.pygame_initialized:
-                pygame.mixer.music.stop()
-                pygame.mixer.quit()
+                if pygame.mixer.get_init():  # Check if mixer is initialized
+                    pygame.mixer.music.stop()
+                    pygame.mixer.quit()
                 pygame.quit()
             
             # Wait for audio thread to complete
@@ -360,20 +370,6 @@ class AICharacter:
             self.state = AICharacterState.IDLE
             self.pygame_initialized = False
             
-            # Clean up temp directory - only remove our specific subdirectory
-            if os.path.exists(self.temp_dir):
-                for file in os.listdir(self.temp_dir):
-                    file_path = os.path.join(self.temp_dir, file)
-                    try:
-                        if os.path.isfile(file_path):
-                            os.remove(file_path)
-                    except Exception as e:
-                        print(f"Error removing file {file_path}: {e}")
-                try:
-                    os.rmdir(self.temp_dir)
-                except Exception as e:
-                    print(f"Error removing temp directory: {e}")
-                
         except Exception as e:
             print(f"Error during cleanup: {e}")
 
