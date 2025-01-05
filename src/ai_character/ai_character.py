@@ -250,8 +250,12 @@ class AICharacter:
         def audio_worker():
             self.set_state(AICharacterState.SPEAKING)
             try:
-                self._notify_speaking_state(True)
+                # Set current_response BEFORE notifying about speaking state
                 self.current_response = text
+                if self.debug:
+                    print(f"\nSetting current_response: {self.current_response[:50]}...")
+                
+                self._notify_speaking_state(True)  # Moved after setting current_response
                 
                 try:
                     audio_stream = self.eleven_client.generate(
@@ -286,6 +290,8 @@ class AICharacter:
                 finally:
                     self._notify_speaking_state(False)
                     self._notify_speaking_done()
+                    if self.debug:
+                        print("\nClearing current_response")
                     self.current_response = None
                     if callback:
                         callback()

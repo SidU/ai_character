@@ -16,16 +16,16 @@ class AICharacterAgent:
             return yaml.safe_load(f)
 
     def _on_speaking_state_changed(self, is_speaking):
-        # If debug, print transitions
         if is_speaking:
             if self.debug:
                 print("\nCharacter is speaking...", end='', flush=True)
+                print(f"\nCurrent response: {self.character.current_response[:50]}..." if self.character.current_response else "None")
             self._speaking_done.clear()
 
     def _on_speaking_done(self):
-        # If debug, print completion message
         if self.debug:
             print("\nCharacter finished speaking!")
+            print(f"Current response cleared: {self.character.current_response is None}")
         self._speaking_done.set()
 
     def run(self):
