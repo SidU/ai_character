@@ -80,6 +80,7 @@ class AICharacter:
         self.rate_limiter = RateLimiter(max_requests=20, time_window=60)  # 20 requests per minute
         self.metrics = AICharacterMetrics()
         self.audio_processor = AudioProcessor(config, debug=debug)
+        self.current_response = None
 
     def _debug_print(self, *args, **kwargs):
         """Print debug information if debug mode is enabled."""
@@ -250,6 +251,7 @@ class AICharacter:
             self.set_state(AICharacterState.SPEAKING)
             try:
                 self._notify_speaking_state(True)
+                self.current_response = text
                 
                 try:
                     audio_stream = self.eleven_client.generate(
@@ -284,12 +286,14 @@ class AICharacter:
                 finally:
                     self._notify_speaking_state(False)
                     self._notify_speaking_done()
+                    self.current_response = None
                     if callback:
                         callback()
 
             finally:
                 self.set_state(AICharacterState.IDLE)
                 self._notify_speaking_state(False)
+                self.current_response = None
                 if callback:
                     callback()
 
